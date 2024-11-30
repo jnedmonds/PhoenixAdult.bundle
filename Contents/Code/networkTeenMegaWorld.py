@@ -7,7 +7,7 @@ def search(results, lang, siteNum, searchData):
         url = PAsearchSites.getSearchSearchURL(siteNum) + '%s&page=%d' % (searchData.encoded, searchPageNum)
         req = PAutils.HTTPRequest(url)
         searchResults = HTML.ElementFromString(req.text)
-        for searchResult in searchResults.xpath('//div[contains(@class,"thumb thumb-photo")]'):
+        for searchResult in searchResults.xpath('//div[contains(@class,"thumb thumb-video")]'):
             titleNoFormatting = searchResult.xpath('.//a[@class="thumb__title-link"]')[0].text_content().strip()
             titleNoFormatting = PAutils.parseTitle(titleNoFormatting, siteNum)
 

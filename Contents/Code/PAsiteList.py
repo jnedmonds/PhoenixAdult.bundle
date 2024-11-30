@@ -1443,7 +1443,7 @@ searchSites = {
     1249: ('Foster Tapes', 'https://www.teamskeet.com', '/movies/'),
     1250: ('Freeuse Fantasy', 'https://www.teamskeet.com', '/movies/'),
     1251: ('Not My Grandpa', 'https://www.teamskeet.com', '/movies/'),
-    1252: ('AmateurBoxxx', 'https://tour.amateurboxxx.com', '/search.php?query='),
+    1252: (),
     1253: ('AnalOnly', 'https://tour.analonly.com', '/_next/data/'),
     1254: ('Exposed Whores', 'https://exposedwhores.com/new-tour', '/search.php?query='),
     1255: ('She Seduced Me', 'https://www.sheseducedme.com', '/search.php?query='),
@@ -1980,6 +1980,8 @@ searchSites = {
     1886: ('Heavy on Hotties', 'https://www.heavyonhotties.com', '/'),
     1887: ('Filthy Kings', 'https://www.filthykings.com', 'https://tsmkfa364q-dsn.algolia.net/1/indexes/*/queries'),
     1888: ('MYLF Seeker', 'https://www.filthykings.com', 'https://tsmkfa364q-dsn.algolia.net/1/indexes/*/queries'),
+    1889: ('Score Classics', 'https://www.scoreclassics.com', '/classic-boob-videos/'),
+    1890: ('LustCinema', 'https://next-prod-api.lustcinema.com', '/api/search'),
 }
 
 abbreviations = (
@@ -2599,8 +2601,8 @@ def getProviderFromSiteNum(siteNum):
         elif siteNum == 669:
             provider = siteDorcelClub
 
-        # MissaX / AllHerLuv / AmateurBoxxx / Exposed Whores / She Seduced Me / House of Fyre / Philavise / Lauren Phillips
-        elif siteNum == 672 or siteNum == 673 or siteNum == 1252 or (1254 <= siteNum <= 1255) or (1264 <= siteNum <= 1265) or siteNum == 1327:
+        # MissaX / AllHerLuv / Exposed Whores / She Seduced Me / House of Fyre / Philavise / Lauren Phillips
+        elif siteNum == 672 or siteNum == 673 or (1254 <= siteNum <= 1255) or (1264 <= siteNum <= 1265) or siteNum == 1327:
             provider = siteMissaX
 
         # Mylf
@@ -3016,7 +3018,7 @@ def getProviderFromSiteNum(siteNum):
             provider = siteWoodmanCastingX
 
         # ScoreGroup
-        elif (1012 <= siteNum <= 1021) or (1344 <= siteNum <= 1345) or siteNum == 1744:
+        elif (1012 <= siteNum <= 1021) or (1344 <= siteNum <= 1345) or siteNum == 1744 or siteNum == 1889:
             provider = networkScoreGroup
 
         # TwoTGirls
@@ -3325,5 +3327,9 @@ def getProviderFromSiteNum(siteNum):
         # Heavy on Hotties
         elif siteNum == 1886:
             provider = siteHeavyOnHotties
+
+        # Lust Cinema
+        elif siteNum == 1890:
+            provider = siteXConfessions
 
     return provider

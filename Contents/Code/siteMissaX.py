@@ -9,20 +9,19 @@ def search(results, lang, siteNum, searchData):
         titleNoFormatting = PAutils.parseTitle(searchResult.xpath('.//h4//a | .//p[@class="thumb-title"]')[0].text_content().strip(), siteNum)
         curID = PAutils.Encode(searchResult.xpath('.//a/@href')[0])
 
-        try:
-            releaseDate = parse(searchResult.xpath('.//span[@class="update_thumb_date"] | .//span[@class="date"] | .//div[contains(@class, "updateDetails")]/p/span[2]')[0].text_content().strip())
-        except:
-            releaseDate = ''
-
-        if not siteNum == 1252:
-            releaseDate = releaseDate.strftime('%Y-%m-%d')
+        date = searchResult.xpath('.//span[@class="update_thumb_date"] | .//span[@class="date"] | .//div[contains(@class, "updateDetails")]/p/span[2]')
+        if date:
+            releaseDate = parse(date[0].text_content().strip()).strftime('%Y-%m-%d')
+        else:
+            releaseDate = searchData.dateFormat() if searchData.date else ''
+        displayDate = releaseDate if date else ''
 
         actors = searchResult.xpath('.//span[@class="tour_update_models"]//a | .//p[@class="model-name"]//a')
         if actors:
             firstActor = actors[0].text_content().strip()
             numActors = len(actors) - 1
 
-        displayName = '%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), releaseDate)
+        displayName = '%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), displayDate)
         if firstActor:
             displayName = '%s + %d in %s' % (firstActor, numActors, displayName)
 
@@ -31,7 +30,7 @@ def search(results, lang, siteNum, searchData):
         else:
             score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
-        results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name=displayName, score=score, lang=lang))
+        results.Append(MetadataSearchResult(id='%s|%d|%s' % (curID, siteNum, releaseDate), name=displayName, score=score, lang=lang))
 
     return results
 
@@ -41,6 +40,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     sceneURL = PAutils.Decode(metadata_id[0])
     if not sceneURL.startswith('http'):
         sceneURL = PAsearchSites.getSearchBaseURL(siteNum) + sceneURL
+    if len(metadata_id) > 2:
+        sceneDate = metadata_id[2]
     req = PAutils.HTTPRequest(sceneURL)
     detailsPageElements = HTML.ElementFromString(req.text)
 
@@ -48,10 +49,9 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.title = PAutils.parseTitle(detailsPageElements.xpath('//span[@class="update_title"] | //p[@class="raiting-section__title"]')[0].text_content().strip(), siteNum)
 
     # Summary
-    try:
-        metadata.summary = detailsPageElements.xpath('//span[@class="latest_update_description"] | //p[contains(@class, "text")]')[0].text_content().replace('Includes:', '').replace('Synopsis:', '').strip()
-    except:
-        pass
+    summary = detailsPageElements.xpath('//span[@class="latest_update_description"] | //p[contains(@class, "text")]')
+    if summary:
+        metadata.summary = summary[0].text_content().replace('Includes:', '').replace('Synopsis:', '').strip()
 
     # Studio
     metadata.studio = PAsearchSites.getSearchSiteName(siteNum)
@@ -62,13 +62,15 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.collections.add(tagline)
 
     # Release Date
-    try:
-        date = detailsPageElements.xpath('//span[@class="update_date"] | //span[contains(@class, "availdate")]')[0].text_content().replace('Available to Members Now', '').strip()
-    except:
-        date = detailsPageElements.xpath('//p[@class="dvd-scenes__data"]')[0].text_content().split('|')[1].replace('Added:', '').strip()
-
-    if date:
-        date_object = parse(date)
+    updateDate = detailsPageElements.xpath('//span[@class="update_date"] | //span[contains(@class, "availdate")]')
+    dvdSceneDate = detailsPageElements.xpath('//p[@class="dvd-scenes__data"]')
+    if updateDate:
+        date_object = parse(updateDate[0].text_content().replace('Available to Members Now', '').strip())
+    elif dvdSceneDate:
+        date_object = parse(dvdSceneDate[0].text_content().split('|')[1].replace('Added:', '').strip())
+    elif sceneDate:
+        date_object = parse(sceneDate)
+    if updateDate or dvdSceneDate or sceneDate:
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
@@ -76,6 +78,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     actors = detailsPageElements.xpath('//div[@class="update_block"]//span[@class="tour_update_models"]//a | //p[@class="dvd-scenes__data"][1]//a')
     for actorLink in actors:
         actorName = actorLink.text_content().strip()
+        actorPhotoURL = ''
 
         if siteNum == 1264 and metadata.title.endswith(': ' + actorName):
             metadata.title = metadata.title[:-len(': ' + actorName)]
@@ -83,7 +86,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         actorPageURL = actorLink.get('href')
         req = PAutils.HTTPRequest(actorPageURL)
         actorPageElements = HTML.ElementFromString(req.text)
-        actorPhotoURL = ''
         actorPhotoElement = actorPageElements.xpath('//img[contains(@class, "model_bio_thumb")]/@src0_1x')
         if actorPhotoElement:
             actorPhotoURL = actorPhotoElement[0]

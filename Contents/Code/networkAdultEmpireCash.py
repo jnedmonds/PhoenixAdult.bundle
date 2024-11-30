@@ -3,6 +3,7 @@ import PAutils
 
 
 def search(results, lang, siteNum, searchData):
+    cookies = {'ageConfirmed': 'true'}
     sceneID = None
     parts = searchData.title.split()
     if unicode(parts[0], 'UTF-8').isdigit():
@@ -11,7 +12,7 @@ def search(results, lang, siteNum, searchData):
 
         directURL = '%s/%s/%s.html' % (PAsearchSites.getSearchBaseURL(siteNum), sceneID, slugify(searchData.title))
 
-        req = PAutils.HTTPRequest(directURL)
+        req = PAutils.HTTPRequest(directURL, cookies=cookies)
 
         if req.ok:
             detailsPageElements = HTML.ElementFromString(req.text)
@@ -30,7 +31,7 @@ def search(results, lang, siteNum, searchData):
 
             results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), displayDate), score=score, lang=lang))
 
-    req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + searchData.encoded)
+    req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + searchData.encoded, cookies=cookies)
     searchResults = HTML.ElementFromString(req.text)
     for searchResult in searchResults.xpath('//div[contains(@class, "item-grid")]/div[@class="grid-item"]'):
         try:
@@ -60,8 +61,9 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     sceneURL = PAutils.Decode(metadata_id[0])
     if not sceneURL.startswith('http'):
         sceneURL = PAsearchSites.getSearchBaseURL(siteNum) + sceneURL
+    cookies = {'ageConfirmed': 'true'}
 
-    req = PAutils.HTTPRequest(sceneURL)
+    req = PAutils.HTTPRequest(sceneURL, cookies=cookies)
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title

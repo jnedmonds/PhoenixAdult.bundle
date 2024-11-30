@@ -37,9 +37,13 @@ def search(results, lang, siteNum, searchData):
 
         results.Append(MetadataSearchResult(id='%s|%d|%s' % (curID, siteNum, releaseDate), name='%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), displayDate), score=score, lang=lang))
 
-    for searchResult in searchPageElements.xpath('//div[contains(@class, "movie-preview")]'):
-        titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a/div')[0].text_content().strip(), siteNum)
-        sceneURL = searchResult.xpath('./a[@class="group"]/@href')[0]
+    for searchResult in searchPageElements.xpath('//div[contains(@class, "movie-preview") or contains(@class, "video_container")]'):
+        sceneURL = searchResult.xpath('./a[contains(@class, "group")]/@href')[0]
+        if 'dvd' in sceneURL:
+            titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a/div')[0].text_content().strip(), siteNum)
+        else:
+            titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a/span')[0].text_content().strip(), siteNum)
+
         if 'http' not in sceneURL:
             sceneURL = PAsearchSites.getSearchBaseURL(siteNum) + sceneURL
         curID = PAutils.Encode(sceneURL)

@@ -2,8 +2,22 @@ import PAsearchSites
 import PAutils
 
 
+def getSearchFromForm(query, siteNum):
+    params = {
+        'keywords': query,
+        's_filters[type]': 'videos',
+        's_filters[site]': 'current'
+    }
+    searchURL = '%s/search-es' % PAsearchSites.getSearchBaseURL(siteNum)
+    req = PAutils.HTTPRequest(searchURL, params=params)
+    data = HTML.ElementFromString(req.text)
+
+    return data
+
+
 def search(results, lang, siteNum, searchData):
     searchResults = []
+    searchPageResults = []
     searchID = None
 
     parts = searchData.title.split()
@@ -14,34 +28,52 @@ def search(results, lang, siteNum, searchData):
         sceneID = re.sub(r'\D', '', searchData.title)
         actorName = re.sub(r'\s\d.*', '', searchData.title).replace(' ', '-')
         directURL = '%s%s/%s/' % (PAsearchSites.getSearchSearchURL(siteNum), actorName, sceneID)
+        searchData.title = searchData.title.replace(sceneID, '', 1).strip()
         searchResults.append(directURL)
 
     urlID = PAsearchSites.getSearchSearchURL(siteNum).replace(PAsearchSites.getSearchBaseURL(siteNum), '')
 
+    searchPageElements = getSearchFromForm(searchData.title, siteNum)
+    for searchResult in searchPageElements.xpath('//div[contains(@class, "compact video")]'):
+        titleNoFormatting = PAutils.parseTitle(searchResult.xpath('.//a[contains(@class, "title")]')[0].text_content().strip(), siteNum)
+        sceneURL = searchResult.xpath('.//a[contains(@class, "title")]/@href')[0].strip().split('?')[0]
+        curID = PAutils.Encode(sceneURL)
+        searchPageResults.append(sceneURL)
+        match = re.search(r'(?<=\/)\d+(?=\/)', sceneURL)
+        if match:
+            searchID = match.group(0)
+        actors = PAutils.Encode(searchResult.xpath('.//small[@class="i-model"]')[0].text_content())
+        img = PAutils.Encode(searchResult.xpath('.//img/@src')[0])
+
+        releaseDate = searchData.dateFormat() if searchData.date else ''
+
+        if searchID and searchID == sceneID:
+            score = 100
+        else:
+            score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
+
+        results.Append(MetadataSearchResult(id='%s|%d|%s|%s|%s|%s' % (curID, siteNum, releaseDate, PAutils.Encode(titleNoFormatting), actors, img), name='%s [%s]' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum)), score=score, lang=lang))
+
     googleResults = PAutils.getFromGoogleSearch(searchData.title, siteNum)
     for sceneURL in googleResults:
-        if urlID in sceneURL and '?' not in sceneURL and sceneURL not in searchResults:
+        if urlID in sceneURL and '?' not in sceneURL and sceneURL not in searchResults and sceneURL not in searchPageResults:
             searchResults.append(sceneURL)
 
     for sceneURL in searchResults:
         req = PAutils.HTTPRequest(sceneURL)
-        searchPageElements = HTML.ElementFromString(req.text)
-        titleNoFormatting = PAutils.parseTitle(searchPageElements.xpath('//h1')[0].text_content().strip(), siteNum)
+        scenePageElements = HTML.ElementFromString(req.text)
+        titleNoFormatting = PAutils.parseTitle(scenePageElements.xpath('//h1')[0].text_content().strip(), siteNum)
 
-        if '404' not in titleNoFormatting and 'Latest Videos' not in titleNoFormatting:
+        if '404' not in titleNoFormatting and not re.search('Latest.*Videos', titleNoFormatting):
             match = re.search(r'(?<=\/)\d+(?=\/)', sceneURL)
             if match:
                 searchID = match.group(0)
 
             curID = PAutils.Encode(sceneURL)
 
-            try:
-                date = searchPageElements.xpath('//div[./span[contains(., "Date:")]]//span[@class="value"]')[0].text_content().strip()
-            except:
-                date = ''
-
+            date = scenePageElements.xpath('//div[./span[contains(., "Date:")]]//span[@class="value"]')
             if date:
-                releaseDate = parse(date).strftime('%Y-%m-%d')
+                releaseDate = parse(date[0].text_content().strip()).strftime('%Y-%m-%d')
             else:
                 releaseDate = searchData.dateFormat() if searchData.date else ''
             displayDate = releaseDate if date else ''
@@ -69,17 +101,35 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
-    metadata.title = PAutils.parseTitle(detailsPageElements.xpath('//h1')[0].text_content().strip(), siteNum)
+    title = detailsPageElements.xpath('//h1')[0].text_content().strip()
+    if not title:
+        actors = detailsPageElements.xpath('//div/span[@class="value"]/a/text()')
+        if len(actors) > 1:
+            title = ' and '.join(actors)
+        elif actors:
+            title = actors[0]
+
+    if re.search('Latest.*Videos', title):
+        title = PAutils.Decode(metadata_id[3])
+        actors = PAutils.Decode(metadata_id[4]).split(',')
+        art.append(PAutils.Decode(metadata_id[5]))
+        for actorLink in actors:
+            actorName = actorLink.strip()
+            actorPhotoURL = ''
+
+            movieActors.addActor(actorName, actorPhotoURL)
+    metadata.title = PAutils.parseTitle(title, siteNum).replace('Coming Soon:', '').strip()
 
     # Summary
     summary_xpaths = [
-        '//div[@class="p-desc"]',
-        '//div[contains(@class, "desc")]'
+        '//div[contains(@class, "p-desc")]/text()',
+        '//div[contains(@class, "desc")]/text()'
     ]
 
     for xpath in summary_xpaths:
-        for summary in detailsPageElements.xpath(xpath):
-            metadata.summary = summary.text_content().replace('Read More »', '').strip()
+        summary = detailsPageElements.xpath(xpath)
+        if summary:
+            metadata.summary = '\n'.join([x for x in summary if x and x != ' ']).strip()
             break
 
     # Studio
@@ -91,9 +141,11 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.collections.add(metadata.tagline)
 
     # Release Date
-    date = detailsPageElements.xpath('//div/span[@class="value"]')
+    try:
+        date = detailsPageElements.xpath('//div/span[@class="value"]')[1].text_content().strip()
+    except:
+        date = None
     if date:
-        date = date[1].text_content().strip()
         date_object = parse(date)
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
@@ -102,21 +154,39 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
+    # Genres
+    genre_xpaths = [
+        '//div[@class="mb-3"]/a',
+        '//div[contains(@class, "desc")]//a[contains(@href, "tag") or contains(@href, "category")]'
+    ]
+
+    for xpath in genre_xpaths:
+        for genreLink in detailsPageElements.xpath(xpath):
+            genreName = genreLink.text_content().strip()
+
+            movieGenres.addGenre(genreName)
+
     # Actor(s)
     for actorLink in detailsPageElements.xpath('//div/span[@class="value"]/a'):
         actorName = actorLink.text_content().strip()
         actorPhotoURL = ''
+        gender = ''
 
-        movieActors.addActor(actorName, actorPhotoURL)
+        try:
+            modelURL = actorLink.xpath('.//@href')[0].split('?')[0]
+            gender = 'male' if '/male-' in modelURL else ''
+            req = PAutils.HTTPRequest(modelURL)
+            modelPageElements = HTML.ElementFromString(req.text)
+
+            actorPhotoURL = modelPageElements.xpath('//div[@class="item-img pos-rel"]//img/@src')[0]
+        except:
+            pass
+
+        if actorName.lower() != 'extra':
+            movieActors.addActor(actorName, actorPhotoURL, gender=gender)
 
     if siteNum == 1344:
         movieActors.addActor('Christy Marks', '')
-
-    # Genres
-    for genreLink in detailsPageElements.xpath('//div[@class="mb-3"]/a'):
-        genreName = genreLink.text_content().strip()
-
-        movieGenres.addGenre(genreName)
 
     # Posters/Background
     match = re.search(r'posterImage: \'(.*)\'', req.text)

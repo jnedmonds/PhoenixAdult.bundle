@@ -292,11 +292,13 @@ def parseTitle(s, siteNum):
     s = preParseTitle(s)
     word_list = re.split(' ', s)
 
+    pattern = re.compile(r'\W')
     firstWord = parseWord(word_list[0], siteNum)
-    if len(firstWord) > 1:
+    cleanfirstWord = re.sub(pattern, '', firstWord)
+    if len(cleanfirstWord) > 1:
         firstWord = firstWord[0].capitalize() + firstWord[1:]
     else:
-        firstWord = firstWord.capitalize()
+        firstWord = firstWord.upper()
 
     final = [firstWord]
 
@@ -400,6 +402,8 @@ def postParseTitle(output):
     output = re.sub(r'(?<=\S)([\"]\S+)', lambda m: ' ' + m.group(1), output)
     # Remove space between punctuation and word
     output = re.sub(r'(?<=[#\(\"])\s+', '', output)
+    # Add space after closing double quote
+    output = re.sub(r'"(?!\s)(?=(?:(?:[^"]*"){2})*[^"]*$)', '" ', output)
     # Override lowercase if word follows a punctuation
     output = re.sub(ur'(?<!vs\.)(?<=!|:|\?|\.|-|\u2013)(\s)(\S)', lambda m: m.group(1) + m.group(2).upper(), output)
     # Override lowercase if word follows certain punctuation
@@ -408,6 +412,10 @@ def postParseTitle(output):
     output = re.sub(r'\S+[\]\)\"\~\:]', lambda m: m.group(0)[0].capitalize() + m.group(0)[1:], output)
     # Override lowercase if last word
     output = re.sub(r'\S+$', lambda m: m.group(0)[0].capitalize() + m.group(0)[1:], output)
+    # Add period at end of string for Initials
+    output = re.sub(r'^\w\.\s\w(?<=$)', lambda m: m.group(0) + '.', output)
+    # Remove space between initials
+    output = re.sub(r'^(\w\.)\s(\w\.)', lambda m: m.group(1) + m.group(2), output)
 
     if re.search(r'(,\sthe)(?=:|\s\()', output, re.IGNORECASE):
         output = re.sub(r'(,\sthe)(?=:|\s\()', '', output, flags=re.IGNORECASE)

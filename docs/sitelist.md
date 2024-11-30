@@ -209,7 +209,6 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
 + #### AllAnalAllTheTime | ✅
 + #### AllHerLuv | ✓
 + #### ALS Angels | ❌ - **Actress name with subject, Date Add**
-+ #### AmateurBoxxx | ✓
 + #### Amateur Allure | ✓
 + #### AmourAngels | ❌ - **SceneID**
 + #### AnalVids | ✅
@@ -1769,6 +1768,7 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - WowPorn
 + #### X-Art | ✅
 + #### XConfessions | ✓
+  - LustCinema
 + #### XEmpire | ✅
   - AllBlackX
   - Darkx

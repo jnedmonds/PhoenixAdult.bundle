@@ -8,7 +8,8 @@ class PhoenixActors:
     directorsTable = []
     producersTable = []
 
-    def addActor(self, newActor, newPhoto):
+    def addActor(self, newActor, newPhoto, **kwargs):
+        newGender = kwargs.pop('gender', '')
         newActor = newActor.encode('UTF-8') if isinstance(newActor, unicode) else newActor
         newPhoto = newPhoto.encode('UTF-8') if isinstance(newPhoto, unicode) else newPhoto
 
@@ -16,6 +17,7 @@ class PhoenixActors:
             self.actorsTable.append({
                 'name': newActor,
                 'photo': newPhoto,
+                'gender': newGender,
             })
 
     def addDirector(self, newDirector, newPhoto):
@@ -94,6 +96,10 @@ class PhoenixActors:
                         displayActorName = actorName.replace('\xc2\xa0', '').strip()
 
                         (actorPhoto, gender) = actorDBfinder(displayActorName, metadata)
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            actorLink['gender'] = gender
                         Log('Actor: %s %s' % (displayActorName, actorPhoto))
                         Log('Gender: %s' % gender)
                         if Prefs['gender_enable']:
@@ -111,12 +117,20 @@ class PhoenixActors:
 
                     if not req or not req.ok:
                         (actorPhoto, gender) = actorDBfinder(displayActorName, metadata)
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            actorLink['gender'] = gender
                         Log('Gender: %s' % gender)
                         if Prefs['gender_enable']:
                             if gender == 'male':
                                 continue
                     elif Prefs['gender_enable']:
-                        gender = genderCheck(actorName)
+                        if actorLink['gender']:
+                            gender = actorLink['gender']
+                        else:
+                            gender = genderCheck(actorName)
+                            actorLink['gender'] = gender
                         Log('Gender: %s' % gender)
                         if gender == 'male':
                             continue
