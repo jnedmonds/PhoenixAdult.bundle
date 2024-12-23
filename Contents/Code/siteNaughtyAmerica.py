@@ -72,8 +72,20 @@ def search(results, lang, siteNum, searchData):
 
         for idx in range(2, pagination):
             for searchResult in searchResults.xpath(searchxPath):
-                titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a//@title')[0].strip(), siteNum)
+                #titleNoFormatting = PAutils.parseTitle(searchResult.xpath('./a//@title')[0].strip(), siteNum)
+                
+                # Get the title from the href
+                tempTitle = searchResult.xpath('./a//@href')[0].strip()
+                newTitle = tempTitle.replace('https://www.naughtyamerica.com/scene/','')
+                
                 curID = int(searchResult.xpath('./a/@data-scene-id')[0])
+                newTitle = newTitle.replace(str(curID),'')
+                newTitle = newTitle[:-1]
+                
+                titleNoFormatting = PAutils.parseTitle(newTitle, siteNum)
+                Log('Title: %s' % titleNoFormatting)
+                Log('Scene ID: %s' % curID)
+                
                 releaseDate = parse(searchResult.xpath('./p[@class="entry-date"]/text()')[0]).strftime('%Y-%m-%d')
                 siteName = searchResult.xpath('.//a[@class="site-title"]')[0].text_content()
 
@@ -83,7 +95,11 @@ def search(results, lang, siteNum, searchData):
                     score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
                 results.Append(MetadataSearchResult(id='%d|%d' % (curID, siteNum), name='%s [%s] %s' % (titleNoFormatting, siteName, releaseDate), score=score, lang=lang))
-
+                
+                # break out of loop if the score is higher than 80%
+                if score > 80:
+                    break
+    
             if pagination > 1 and not pagination == idx + 1:
                 if 'pornstar' in req.url:
                     searchURL = '%s/pornstar/%s?related_page=%d' % (PAsearchSites.getSearchBaseURL(siteNum), slugify(searchData.title), idx)
