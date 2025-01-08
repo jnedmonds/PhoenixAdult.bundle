@@ -3,7 +3,8 @@ import PAutils
 
 
 def getJSONfromPage(url):
-    req = PAutils.HTTPRequest(url)
+    cookies = {'age_verified': 'yes'}
+    req = PAutils.HTTPRequest(url, cookies=cookies)
 
     if req:
         jsonData = re.search(r'window\.__INITIAL_STATE__ = (.*);', req.text)

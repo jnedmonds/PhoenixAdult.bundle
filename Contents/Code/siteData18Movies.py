@@ -295,7 +295,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     # Posters
     photos = []
     xpaths = [
-        '//a[@id="enlargecover"]//@href',
+        '//a[@id="enlargecover"]//@data-featherlight',
         '//img[@id="backcoverzone"]//@src',
         '//img[@id="imgposter"]//@src',
         '//img[contains(@src, "th8")]/@src',

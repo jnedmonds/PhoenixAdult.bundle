@@ -24,6 +24,7 @@ def getReleaseDateAndDisplayDate(detailsPageElements, searchData=None):
 
 
 def search(results, lang, siteNum, searchData):
+    cookies = {'ageConfirmed': 'true'}
     searchResults = []
     siteResults = []
     temp = []
@@ -44,7 +45,7 @@ def search(results, lang, siteNum, searchData):
     if not directID:
         searchData.encoded = searchData.title.replace('&', '').replace('\'', '').replace(',', '').replace('#', '').replace(' ', '+')
         searchURL = '%s%s' % (PAsearchSites.getSearchSearchURL(siteNum), searchData.encoded)
-        req = PAutils.HTTPRequest(searchURL, headers={'Referer': 'http://www.data18.empirestores.co'})
+        req = PAutils.HTTPRequest(searchURL, headers={'Referer': 'http://www.data18.empirestores.co'}, cookies=cookies)
         searchPageElements = HTML.ElementFromString(req.text)
 
         for searchResult in searchPageElements.xpath('//div[@class="product-details__item-title"]'):
@@ -68,7 +69,7 @@ def search(results, lang, siteNum, searchData):
 
                 if score > 70:
                     sceneURL = PAutils.Decode(curID)
-                    req = PAutils.HTTPRequest(sceneURL)
+                    req = PAutils.HTTPRequest(sceneURL, cookies=cookies)
                     detailsPageElements = HTML.ElementFromString(req.text)
 
                     # Find date on movie specific page
@@ -136,7 +137,7 @@ def search(results, lang, siteNum, searchData):
                 searchResults.append(cleanURL)
 
     for movieURL in searchResults:
-        req = PAutils.HTTPRequest(movieURL)
+        req = PAutils.HTTPRequest(movieURL, cookies=cookies)
         detailsPageElements = HTML.ElementFromString(req.text)
 
         urlID = re.sub(r'.*/', '', movieURL)
@@ -204,11 +205,12 @@ def search(results, lang, siteNum, searchData):
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    cookies = {'ageConfirmed': 'true'}
     splitScene = False
     metadata_id = str(metadata.id).split('|')
     sceneURL = PAutils.Decode(metadata_id[0])
     sceneDate = metadata_id[2]
-    req = PAutils.HTTPRequest(sceneURL)
+    req = PAutils.HTTPRequest(sceneURL, cookies=cookies)
     detailsPageElements = HTML.ElementFromString(req.text)
 
     if len(metadata_id) > 3:

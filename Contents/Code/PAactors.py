@@ -435,14 +435,15 @@ def getFromIndexxx(actorName, actorEncoded, metadata):
 
 
 def getFromAdultDVDEmpire(actorName, actorEncoded, metadata):
+    cookies = {'ageConfirmed': 'true'}
     actorPhotoURL = ''
 
-    req = PAutils.HTTPRequest('https://www.adultdvdempire.com/performer/search?q=' + actorEncoded)
+    req = PAutils.HTTPRequest('https://www.adultdvdempire.com/performer/search?q=' + actorEncoded, cookies=cookies)
     actorSearch = HTML.ElementFromString(req.text)
     actorPageURL = actorSearch.xpath('//div[@id="performerlist"]/div//a/@href')
     if actorPageURL:
         actorPageURL = 'https://www.adultdvdempire.com' + actorPageURL[0]
-        req = PAutils.HTTPRequest(actorPageURL)
+        req = PAutils.HTTPRequest(actorPageURL, cookies=cookies)
         actorPage = HTML.ElementFromString(req.text)
         img = actorPage.xpath('//div[contains(@class, "performer-image-container")]/a/@href')
         if img:

@@ -3,7 +3,8 @@ import PAutils
 
 
 def getJSONfromPage(url):
-    req = PAutils.HTTPRequest(url)
+    cookies = {'age_verified': 'yes'}
+    req = PAutils.HTTPRequest(url, cookies=cookies)
 
     if req:
         jsonData = re.search(r'window\.__INITIAL_STATE__ = (.*);', req.text)
@@ -63,6 +64,7 @@ def search(results, lang, siteNum, searchData):
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    cookies = {'age_verified': 'yes'}
     metadata_id = str(metadata.id).split('|')
     sceneName = metadata_id[0]
     sceneDate = metadata_id[2]
