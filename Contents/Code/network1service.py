@@ -9,7 +9,7 @@ def get_Token(siteNum):
     token = None
     if token_key and token_key in Dict:
         data = Dict[token_key].split('.')[1] + '=='
-        data = base64.b64decode(data).decode('UTF-8')
+        #data = base64.b64decode(data).decode('UTF-8')
         if json.loads(data)['exp'] > time.time():
             token = Dict[token_key]
 

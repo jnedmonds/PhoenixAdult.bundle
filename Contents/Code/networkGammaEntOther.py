@@ -9,7 +9,7 @@ def getAPIKey(siteNum):
     token = None
     if token_key and token_key in Dict:
         data = Dict[token_key]
-        data = base64.b64decode(data).decode('UTF-8')
+        #data = base64.b64decode(data).decode('UTF-8')
         if 'validUntil=' in data:
             timestamp = int(data.split('validUntil=')[1].split('&')[0])
             if timestamp > time.time():
@@ -54,7 +54,12 @@ def search(results, lang, siteNum, searchData):
     else:
         sceneID = None
 
+    Log('---- networkGammaEntOther-search(): starting with title: %s' % searchData.title)
+
     apiKEY = getAPIKey(siteNum)
+
+    Log('---- APIKEY %s' % apiKEY)
+
     for sceneType in ['scenes', 'movies']:
         url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=TSMKFA364Q&x-algolia-api-key=' + apiKEY
         if sceneID and not searchData.title:
@@ -65,8 +70,12 @@ def search(results, lang, siteNum, searchData):
         else:
             params = 'query=' + searchData.title
 
+        Log('---- seaching')
+
         searchResults = getAlgolia(url, 'all_' + sceneType, params, PAsearchSites.getSearchBaseURL(siteNum))
         for searchResult in searchResults:
+            Log('---- found results')
+
             if sceneType == 'scenes':
                 releaseDate = parse(searchResult['release_date'])
                 curID = searchResult['clip_id']
@@ -86,11 +95,15 @@ def search(results, lang, siteNum, searchData):
                 score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
             results.Append(MetadataSearchResult(id='%d|%d|%s|%s' % (curID, siteNum, sceneType, releaseDate), name='[%s] %s %s' % (sceneType.capitalize(), PAutils.parseTitle(titleNoFormatting, siteNum), releaseDate), score=score, lang=lang))
+        
+        Log('---- networkGammaEntOther-search(): leaving')
 
     return results
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    Log('---- networkGammaEntOther-update(): starting')
+     
     metadata_id = str(metadata.id).split('|')
     sceneID = int(metadata_id[0])
     sceneType = metadata_id[2]
@@ -103,6 +116,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     data = getAlgolia(url, 'all_' + sceneType, 'filters=%s=%d' % (sceneIDName, sceneID), PAsearchSites.getSearchBaseURL(siteNum))
     detailsPageElements = data[0]
 
+    # Log('---- networkGammaEntOther-update(): detailsPageElements = %s' % detailsPageElements)
+ 
     data = getAlgolia(url, 'all_scenes', 'query=%s' % detailsPageElements['url_title'], PAsearchSites.getSearchBaseURL(siteNum))
     data = sorted(data, key=lambda i: i['clip_id'])
     scenesPagesElements = list(enumerate(data, 1))
@@ -216,5 +231,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:
                 pass
+
+    Log('---- networkGammaEntOther-update(): leaving')
 
     return metadata
