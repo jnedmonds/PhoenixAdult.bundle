@@ -18,7 +18,7 @@ def search(results, lang, siteNum, searchData):
             curID = searchResult.xpath('.//span[@class="title"]/a/@href')[0].split('/')[3]
             releaseDate = parse(searchResult.xpath('.//span[@class="date"]')[0].text_content().strip()).strftime('%Y-%m-%d')
 
-            score = 100 - Util.LevenshteinDistance(titleNoActors.lower(), titleNoFormatting.lower().rsplit('-')[0])
+            score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower().rsplit('-')[0])
 
             results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s [%s] %s' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum), releaseDate), score=score, lang=lang))
 
