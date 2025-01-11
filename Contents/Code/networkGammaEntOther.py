@@ -58,7 +58,7 @@ def search(results, lang, siteNum, searchData):
 
     apiKEY = getAPIKey(siteNum)
 
-    Log('---- APIKEY %s' % apiKEY)
+    Log('---- networkGammaEntOther-search(): APIKEY %s' % apiKEY)
 
     for sceneType in ['scenes', 'movies']:
         url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=TSMKFA364Q&x-algolia-api-key=' + apiKEY
@@ -70,12 +70,10 @@ def search(results, lang, siteNum, searchData):
         else:
             params = 'query=' + searchData.title
 
-        Log('---- seaching')
+        Log('---- networkGammaEntOther-search(): seaching')
 
         searchResults = getAlgolia(url, 'all_' + sceneType, params, PAsearchSites.getSearchBaseURL(siteNum))
         for searchResult in searchResults:
-            Log('---- found results')
-
             if sceneType == 'scenes':
                 releaseDate = parse(searchResult['release_date'])
                 curID = searchResult['clip_id']
@@ -85,6 +83,8 @@ def search(results, lang, siteNum, searchData):
                 curID = searchResult['movie_id']
 
             titleNoFormatting = searchResult['title']
+            Log('---- networkGammaEntOther-search(): found: %s' % titleNoFormatting)
+
             releaseDate = releaseDate.strftime('%Y-%m-%d')
 
             if sceneID:
@@ -115,8 +115,6 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=TSMKFA364Q&x-algolia-api-key=' + apiKEY
     data = getAlgolia(url, 'all_' + sceneType, 'filters=%s=%d' % (sceneIDName, sceneID), PAsearchSites.getSearchBaseURL(siteNum))
     detailsPageElements = data[0]
-
-    # Log('---- networkGammaEntOther-update(): detailsPageElements = %s' % detailsPageElements)
  
     data = getAlgolia(url, 'all_scenes', 'query=%s' % detailsPageElements['url_title'], PAsearchSites.getSearchBaseURL(siteNum))
     data = sorted(data, key=lambda i: i['clip_id'])
@@ -136,6 +134,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     metadata.title = PAutils.parseTitle(title, siteNum)
 
+    Log('---- networkGammaEntOther-update(): title = %s' % metadata.title)
+
     # Summary
     metadata.summary = detailsPageElements['description'].replace('</br>', '\n').replace('<br>', '\n')
 
@@ -147,27 +147,35 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             metadata.studio = detailsPageElements['studio_name']
     else:
         metadata.studio = detailsPageElements['network_name']
+    Log('---- networkGammaEntOther-update(): studio = %s' % metadata.studio)
 
     # Tagline and Collection(s)
     if 'filthykings' in PAsearchSites.getSearchBaseURL(siteNum):
         metadata.tagline = detailsPageElements['serie_name']
+    Log('---- networkGammaEntOther-update(): tagline = %s' % metadata.tagline)
+
     for collectionName in ['studio_name', 'serie_name']:
         if collectionName in detailsPageElements:
             metadata.collections.add(detailsPageElements[collectionName])
+            Log('---- networkGammaEntOther-update(): collection = %s' % detailsPageElements[collectionName])
+
     if (':' in detailsPageElements['title'] or '#' in detailsPageElements['title']) and len(scenesPagesElements) > 1:
         if 'movie_title' in detailsPageElements:
             metadata.collections.add(detailsPageElements['movie_title'])
-
+            Log('---- networkGammaEntOther-update(): collection = %s' % detailsPageElements['movie_title'])
+            
     # Release Date
     date_object = parse(sceneDate)
     metadata.originally_available_at = date_object
     metadata.year = metadata.originally_available_at.year
+    Log('---- networkGammaEntOther-update(): release date = %s' % metadata.year)
 
     # Genres
     for genreLink in detailsPageElements['categories']:
         genreName = genreLink['name']
         if genreName:
             movieGenres.addGenre(genreName)
+            Log('---- networkGammaEntOther-update(): genres = %s' % genreName)
 
     if sceneType == 'movies':
         for idx, scene in scenesPagesElements:
@@ -175,12 +183,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 genreName = genreLink['name']
                 if genreName:
                     movieGenres.addGenre(genreName)
+                    Log('---- networkGammaEntOther-update(): genres = %s' % genreName)
 
     # Actor(s)
     female = []
     male = []
     for actorLink in detailsPageElements['actors']:
         actorName = actorLink['name']
+        Log('---- networkGammaEntOther-update(): actor name = %s' % actorName)
 
         actorData = getAlgolia(url, 'all_actors', 'filters=actor_id=' + actorLink['actor_id'], PAsearchSites.getSearchBaseURL(siteNum))[0]
         if 'pictures' in actorData and actorData['pictures']:
@@ -188,6 +198,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             actorPhotoURL = 'https://images-fame.gammacdn.com/actors' + actorData['pictures'][max_quality]
         else:
             actorPhotoURL = ''
+        Log('---- networkGammaEntOther-update(): actor photo URL = %s' % actorPhotoURL)
 
         if actorLink['gender'] == 'female':
             female.append((actorName, actorPhotoURL))

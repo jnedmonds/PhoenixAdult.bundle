@@ -7,19 +7,17 @@ def search(results, lang, siteNum, searchData):
 
     req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + searchData.encoded)
     searchResults = HTML.ElementFromString(req.text)
-    Log('---- seaching')
-    
-    for searchResult in searchResults.xpath('//ul[@id="videoSearchResult"]/li[@data-video-vkey]//a'):
-        titleNoFormatting = searchResult.get('data-title')
+    Log('---- sitePornhub-search(): seaching')
 
-        Log('---- found result title       - %s' % titleNoFormatting)
+    for searchResult in searchResults.xpath('//ul[@id="videoSearchResult"]/li[@data-video-vkey]/div/div[3]/span/a'):
+
+        titleNoFormatting = searchResult.get('title')
+        Log('---- sitePornhub-search(): found result title       - %s' % titleNoFormatting)
         
-        curID = PAutils.Encode('https:' + searchResult.get('href'))
-        Log('---- found result href        - %s' % searchResult.get('href'))
-
+        curID = PAutils.Encode(searchResult.get('href'))
         score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
-        results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s [Pornhub]' % (titleNoFormatting), score=score, lang=lang))
+        results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s [Pornhub]' % titleNoFormatting, score=score, lang=lang))
 
     Log('---- sitePornhub-search(): leaving')
 
@@ -33,13 +31,16 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     sceneURL = PAutils.Decode(metadata_id[0])
     if not sceneURL.startswith('http'):
         sceneURL = PAsearchSites.getSearchBaseURL(siteNum) + sceneURL
+
+    Log('---- sitePornhub-update(): sceneURL: %s' % sceneURL)
+    
     req = PAutils.HTTPRequest(sceneURL)
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
     metadata.title = detailsPageElements.xpath('//h1[@class="title"]')[0].text_content().strip()
 
-    Log('---- updating - title         - %s' % metadata.title)
+    Log('---- sitePornhub-update(): updating - title         - %s' % metadata.title)
 
     # Summary
     try:
@@ -54,6 +55,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     metadata.collections.add(metadata.studio)
 
     tagline = detailsPageElements.xpath('//div[@class="userInfo"]//a')[0].text_content().strip()
+    Log('---- sitePornhub-update(): studio tagline: %s' % tagline)
+    
     metadata.tagline = tagline
     metadata.collections.add(tagline)
     
@@ -67,15 +70,17 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     for genreLink in detailsPageElements.xpath('(//div[@class="categoriesWrapper"] | //div[@class="tagsWrapper"])/a'):
         genreName = genreLink.text_content().title()
 
+        Log('---- sitePornhub-update(): genres: %s' % genreName)
+
         movieGenres.addGenre(genreName)
 
     # Actor(s)
     for actorLink in detailsPageElements.xpath('//div[contains(@class, "pornstarsWrapper")]/a'):
-        actorName = actorLink.text_content().title()
+        actorName = actorLink.text_content().title().strip()
         actorPhotoURL = actorLink.xpath("//img[@class='avatar']/@src")
         
-        Log('---- updating - actor name    - %s' % actorName)        
-        Log('----          - actor picture - %s' % actorPhotoURL)
+        Log('---- sitePornhub-update(): actor name:    %s' % actorName)        
+        Log('----                     : actor picture: %s' % actorPhotoURL)
        
         movieActors.addActor(actorName, actorPhotoURL)
 

@@ -7,8 +7,12 @@ import math
 
 def search(results, lang, siteNum, searchData):
 
+    Log('---- networkPornWorld -search(): starting with title: %s' % searchData.title)
+
     # if we have a scene date, we can use the 'Newest scenes' pages to get a match
     if searchData.date:
+
+        Log('---- networkPornWorld-search(): seaching with date %s' % searchData.date)
 
         # there are 99 scenes per page starting with today on page 1,
         # so let's try to determine the page on which we will find a match
@@ -96,6 +100,8 @@ def search(results, lang, siteNum, searchData):
 
     # if we get to here, results can be extremely sketchy...
     else:
+        Log('---- networkPornWorld-search(): seaching last chance')
+
         searchData.encoded = searchData.title.replace(' ', '+')
         req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + searchData.encoded)
         searchResults = HTML.ElementFromString(req.text)
@@ -121,6 +127,8 @@ def search(results, lang, siteNum, searchData):
             score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
             results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s [%s]' % (titleNoFormatting, PAsearchSites.getSearchSiteName(siteNum)), score=score, lang=lang))
+
+    Log('---- networkPornWorld-search(): leaving')
 
     return results
 

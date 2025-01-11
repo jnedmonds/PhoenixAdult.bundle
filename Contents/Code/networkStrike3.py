@@ -19,10 +19,14 @@ def getDatafromAPI(url, query, variables, referer):
 def search(results, lang, siteNum, searchData):
     sceneID = None
     parts = searchData.title.split()
+
+    Log('---- networkStrike3-search(): starting with title: %s' % searchData.title)
+
+    Log('---- networkStrike3-search(): seaching')
+    
     if unicode(parts[0], 'UTF-8').isdigit() and len(parts[0]) > 4:
         sceneID = parts[0]
         searchData.title = searchData.title.replace(sceneID, '', 1).strip()
-
         search_variables = json.dumps({'videoId': sceneID, 'site': PAsearchSites.getSearchSiteName(siteNum).upper()})
         searchResult = getDatafromAPI(PAsearchSites.getSearchSearchURL(siteNum), search_id_query, search_variables, PAsearchSites.getSearchBaseURL(siteNum))
         if searchResult:
@@ -30,6 +34,8 @@ def search(results, lang, siteNum, searchData):
             releaseDate = parse(searchResult['findOneVideo']['releaseDate']).strftime('%Y-%m-%d')
             curID = PAutils.Encode(searchResult['findOneVideo']['slug'])
             videoID = int(searchResult['findOneVideo']['videoId'])
+
+            Log('---- networkStrike3-search(): found title: %s' % titleNoFormatting)
 
             if int(sceneID) == videoID:
                 score = 100
@@ -39,7 +45,7 @@ def search(results, lang, siteNum, searchData):
                 score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
             results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s %s' % (titleNoFormatting, releaseDate), score=score, lang=lang))
-    else:
+    else:        
         search_variables = json.dumps({'query': searchData.title, 'site': PAsearchSites.getSearchSiteName(siteNum).upper(), 'first': 10, 'skip': 0})
         searchResults = getDatafromAPI(PAsearchSites.getSearchSearchURL(siteNum), search_query, search_variables, PAsearchSites.getSearchBaseURL(siteNum))
         if searchResults:
@@ -48,6 +54,8 @@ def search(results, lang, siteNum, searchData):
                 releaseDate = parse(searchResult['node']['releaseDate']).strftime('%Y-%m-%d')
                 curID = PAutils.Encode(searchResult['node']['slug'])
 
+                Log('---- networkStrike3-search(): found title: %s' % titleNoFormatting)
+
                 if searchData.date:
                     score = 100 - Util.LevenshteinDistance(searchData.date, releaseDate)
                 else:
@@ -55,10 +63,14 @@ def search(results, lang, siteNum, searchData):
 
                 results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s %s' % (titleNoFormatting, releaseDate), score=score, lang=lang))
 
+        Log('---- networkStrike3-search(): leaving')
+        
     return results
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    Log('---- networkStrike3-update(): starting')
+
     metadata_id = str(metadata.id).split('|')
     sceneName = PAutils.Decode(metadata_id[0])
 
@@ -69,12 +81,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Title
     metadata.title = PAutils.parseTitle(video['title'], siteNum)
+    Log('---- networkStrike3-update(): title: %s' % metadata.title)
 
     # Summary
     metadata.summary = video['description']
 
     # Studio
     metadata.studio = PAsearchSites.getSearchSiteName(siteNum).title()
+    Log('---- networkStrike3-update(): studio: %s' % metadata.studio)
 
     # Tagline and Collection(s)
     metadata.collections.add(metadata.studio)
@@ -83,24 +97,30 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     date_object = parse(video['releaseDate'])
     metadata.originally_available_at = date_object
     metadata.year = metadata.originally_available_at.year
+    Log('---- networkStrike3-update(): release date: %s' % metadata.year)
 
     # Genres
     if metadata.studio == 'Tushy' or metadata.studio == 'TushyRaw':
         movieGenres.addGenre('Anal')
+        Log('---- networkStrike3-update(): genre: Anal')
 
     if video['categories']:
         for tag in video['categories']:
             genreName = tag['name']
 
             movieGenres.addGenre(genreName)
+            Log('---- networkStrike3-update(): genre: %s' % genreName)
 
     # Actor(s)
     actors = video['models']
     for actor in actors:
         actorName = actor['name']
+        Log('---- networkStrike3-update(): actor: %s' % actorName)
+
         actorPhotoURL = ''
         if actor['images']:
             actorPhotoURL = actor['images']['listing'][0]['highdpi']['double']
+            Log('---- networkStrike3-update(): actorPhotoURL: %s' % actorPhotoURL)
 
         movieActors.addActor(actorName, actorPhotoURL)
 
@@ -109,6 +129,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         directorName = video['directors'][0]['name']
 
         movieActors.addDirector(directorName, '')
+        Log('---- networkStrike3-update(): director: %s' % directorName)
 
     # Posters
     for name in ['movie', 'poster']:
@@ -164,6 +185,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                     metadata.posters[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
             except:
                 pass
+
+    Log('---- networkStrike3-update(): leaving')
 
     return metadata
 

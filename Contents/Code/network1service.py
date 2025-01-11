@@ -10,8 +10,9 @@ def get_Token(siteNum):
     if token_key and token_key in Dict:
         data = Dict[token_key].split('.')[1] + '=='
         #data = base64.b64decode(data).decode('UTF-8')
-        if json.loads(data)['exp'] > time.time():
-            token = Dict[token_key]
+        #if json.loads(data)['exp'] > time.time():
+            #token = Dict[token_key]
+        token = Dict[token_key]
 
     if not token:
         req = PAutils.HTTPRequest(url, 'HEAD')
