@@ -44,7 +44,8 @@ def search(results, lang, siteNum, searchData):
     if sceneID:
         scenePageElements = getNaughtyAmerica(sceneID)
         titleNoFormatting = PAutils.parseTitle(scenePageElements['title'], siteNum)
-        Log('---- siteNaughtyAmerica-search(): found result title:     %s' % titleNoFormatting)
+        if Prefs['debug_enable']:
+            Log('---- siteNaughtyAmerica-search(): found result title:     %s' % titleNoFormatting)
 
         curID = scenePageElements['id']
         releaseDate = scenePageElements['published_at'].strftime('%Y-%m-%d')
@@ -87,7 +88,8 @@ def search(results, lang, siteNum, searchData):
                 newTitle = newTitle.replace(str(curID),'')
                 newTitle = newTitle[:-1]
                 titleNoFormatting = PAutils.parseTitle(newTitle, siteNum)
-                Log('---- siteNaughtyAmerica-search(): found result title:     %s' % titleNoFormatting)
+                if Prefs['debug_enable']:
+                    Log('---- siteNaughtyAmerica-search(): found result title:     %s' % titleNoFormatting)
                 
                 releaseDate = parse(searchResult.xpath('./p[@class="entry-date"]/text()')[0]).strftime('%Y-%m-%d')
                 siteName = searchResult.xpath('.//a[@class="site-title"]')[0].text_content()
@@ -98,8 +100,9 @@ def search(results, lang, siteNum, searchData):
                     score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
 
                 results.Append(MetadataSearchResult(id='%d|%d' % (curID, siteNum), name='%s [%s] %s' % (titleNoFormatting, siteName, releaseDate), score=score, lang=lang))
-                Log('---- siteNaughtyAmerica-search(): sceneID:                %s' % curID)
-                Log('---- siteNaughtyAmerica-search(): percentage match:       %s' % score)
+                if Prefs['debug_enable']:
+                    Log('---- siteNaughtyAmerica-search(): sceneID:                %s' % curID)
+                    Log('---- siteNaughtyAmerica-search(): percentage match:       %s' % score)
 
                 # break out of loop if the score is higher than 80%                
                 if score > 80:
@@ -135,20 +138,23 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Title
     metadata.title = PAutils.parseTitle(detailsPageElements['title'], siteNum)
-    Log('---- siteNaughtyAmerica-update(): updating title:    %s' % metadata.title)
+    if Prefs['debug_enable']:
+        Log('---- siteNaughtyAmerica-update(): updating title:    %s' % metadata.title)
 
     # Summary
     metadata.summary = detailsPageElements['synopsis']
 
     # Studio
     metadata.studio = 'Naughty America'
-    Log('---- siteNaughtyAmerica-update(): updating title:    %s' % metadata.studio)
+    if Prefs['debug_enable']:
+        Log('---- siteNaughtyAmerica-update(): updating title:    %s' % metadata.studio)
 
     # Tagline and Collection(s)
     tagline = detailsPageElements['site']
     metadata.tagline = tagline
     metadata.collections.add(tagline)
-    Log('---- siteNaughtyAmerica-update(): adding collection: %s' % tagline)
+    if Prefs['debug_enable']:
+        Log('---- siteNaughtyAmerica-update(): adding collection: %s' % tagline)
 
     # Release Date
     date_object = detailsPageElements['published_at']
@@ -164,7 +170,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         genreName = genreLink
 
         movieGenres.addGenre(genreName)
-        Log('---- siteNaughtyAmerica-update(): genres:            %s' % genreName)
+        if Prefs['debug_enable']:
+            Log('---- siteNaughtyAmerica-update(): genres:            %s' % genreName)
 
     # Actor(s)
     for actorLink in detailsPageElements['performers']:
@@ -179,8 +186,9 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             actorPhotoURL = 'https:' + img[0]
 
         movieActors.addActor(actorName, actorPhotoURL)
-        Log('---- siteNaughtyAmerica-update(): actor name:        %s' % actorName)        
-        Log('----                            : actor picture:     %s' % actorPhotoURL)
+        if Prefs['debug_enable']:
+            Log('---- siteNaughtyAmerica-update(): actor name:        %s' % actorName)        
+            Log('----                            : actor picture:     %s' % actorPhotoURL)
 
     # Posters
     for img in detailsPageElements['photos']:
@@ -202,12 +210,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if height > width:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
                     posterExists = True
                 if width > height:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- siteNaughtyAmerica-update(): art item:          %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- siteNaughtyAmerica-update(): art item:          %s' % posterUrl)
             except:
                 pass
 
@@ -222,7 +232,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if height > width:
                     # Item is a poster
                     metadata.posters[art[idx - 1]] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
             except:
                 pass
 
@@ -236,7 +247,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if width > 1:
                     # Item is a poster
                     metadata.posters[art[idx - 1]] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- siteNaughtyAmerica-update(): poster:            %s' % posterUrl)
             except:
                 pass
 

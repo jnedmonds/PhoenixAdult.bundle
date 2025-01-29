@@ -80,7 +80,8 @@ def search(results, lang, siteNum, searchData):
                 curID = searchResult['movie_id']
 
             titleNoFormatting = searchResult['title']
-            Log('---- networkGammaEntOther-search(): found result title:     %s' % titleNoFormatting)
+            if Prefs['debug_enable']:
+                Log('---- networkGammaEntOther-search(): found result title:     %s' % titleNoFormatting)
             
             releaseDate = releaseDate.strftime('%Y-%m-%d')
 
@@ -132,7 +133,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         title = detailsPageElements['title']
 
     metadata.title = PAutils.parseTitle(title, siteNum)
-    Log('---- networkGammaEntOther-update(): updating title:    %s' % metadata.title)
+    if Prefs['debug_enable']:
+        Log('---- networkGammaEntOther-update(): updating title:    %s' % metadata.title)
     
     # Summary
     metadata.summary = detailsPageElements['description'].replace('</br>', '\n').replace('<br>', '\n')
@@ -145,20 +147,24 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             metadata.studio = detailsPageElements['studio_name']
     else:
         metadata.studio = detailsPageElements['network_name']
-    Log('---- networkGammaEntOther-update(): studio:            %s' % metadata.studio)
+    if Prefs['debug_enable']:
+        Log('---- networkGammaEntOther-update(): studio:            %s' % metadata.studio)
 
     # Tagline and Collection(s)
     if 'filthykings' in PAsearchSites.getSearchBaseURL(siteNum):
         metadata.tagline = detailsPageElements['serie_name']
-        Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
+        if Prefs['debug_enable']:
+            Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
     for collectionName in ['studio_name', 'serie_name']:
         if collectionName in detailsPageElements:
             metadata.collections.add(detailsPageElements[collectionName])
-            Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
+            if Prefs['debug_enable']:
+                Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
     if (':' in detailsPageElements['title'] or '#' in detailsPageElements['title']) and len(scenesPagesElements) > 1:
         if 'movie_title' in detailsPageElements:
             metadata.collections.add(detailsPageElements['movie_title'])
-            Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements['movie_title'])
+            if Prefs['debug_enable']:
+                Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements['movie_title'])
             
     # Release Date
     date_object = parse(sceneDate)
@@ -170,7 +176,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         genreName = genreLink['name']
         if genreName:
             movieGenres.addGenre(genreName)
-            Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
+            if Prefs['debug_enable']:
+                Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
 
     if sceneType == 'movies':
         for idx, scene in scenesPagesElements:
@@ -178,7 +185,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 genreName = genreLink['name']
                 if genreName:
                     movieGenres.addGenre(genreName)
-                    Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
+                    if Prefs['debug_enable']:
+                        Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
 
     # Actor(s)
     female = []
@@ -201,8 +209,9 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     combined = female + male
     for actor in combined:
         movieActors.addActor(actor[0], actor[1])
-        Log('---- networkGammaEntOther-update(): actor name:        %s' % actor[0])        
-        Log('----                              : actor picture:     %s' % actor[1])
+        if Prefs['debug_enable']:
+            Log('---- networkGammaEntOther-update(): actor name:        %s' % actor[0])        
+            Log('----                              : actor picture:     %s' % actor[1])
 
     # Posters
     if not PAsearchSites.getSearchBaseURL(siteNum).endswith(('girlsway.com', 'puretaboo.com')):
@@ -232,11 +241,13 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if width > 1:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- networkGammaEntOther-update(): poster:            %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- networkGammaEntOther-update(): poster:            %s' % posterUrl)
                 if width > 100 and width > height:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                    Log('---- networkGammaEntOther-update(): art item:          %s' % posterUrl)
+                    if Prefs['debug_enable']:
+                        Log('---- networkGammaEntOther-update(): art item:          %s' % posterUrl)
             except:
                 pass
 

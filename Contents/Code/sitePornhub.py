@@ -12,7 +12,8 @@ def search(results, lang, siteNum, searchData):
     for searchResult in searchResults.xpath('//ul[@id="videoSearchResult"]/li[@data-video-vkey]/div/div[3]/span/a'):
 
         titleNoFormatting = searchResult.get('title')
-        Log('---- sitePornhub-search(): found result title:     %s' % titleNoFormatting)
+        if Prefs['debug_enable']:
+            Log('---- sitePornhub-search(): found result title:     %s' % titleNoFormatting)
         
         curID = PAutils.Encode(searchResult.get('href'))
         score = 100 - Util.LevenshteinDistance(searchData.title.lower(), titleNoFormatting.lower())
@@ -38,7 +39,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Title
     metadata.title = detailsPageElements.xpath('//h1[@class="title"]')[0].text_content().strip()
-    Log('---- sitePornhub-update(): updating title:         %s' % metadata.title)
+    if Prefs['debug_enable']:
+        Log('---- sitePornhub-update(): updating title:         %s' % metadata.title)
     
     # Summary
     try:
@@ -48,7 +50,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Studio
     metadata.studio = 'Pornhub'
-    Log('---- sitePornhub-update(): studio:                 %s' % metadata.studio)
+    if Prefs['debug_enable']:
+        Log('---- sitePornhub-update(): studio:                 %s' % metadata.studio)
     
     # Tagline and Collection(s)
     metadata.collections.add(metadata.studio)
@@ -56,7 +59,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     tagline = detailsPageElements.xpath('//div[@class="userInfo"]//a')[0].text_content().strip()
     metadata.tagline = tagline
     metadata.collections.add(tagline)
-    Log('---- sitePornhub-update(): adding collection:      %s' % tagline)
+    if Prefs['debug_enable']:
+        Log('---- sitePornhub-update(): adding collection:      %s' % tagline)
     
     # Release Date
     # date = detailsPageElements.xpath('//ul[@class="more-info"]//li[2]')[0].text_content().replace('RELEASE DATE:', '').strip()
@@ -68,7 +72,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     for genreLink in detailsPageElements.xpath('(//div[@class="categoriesWrapper"] | //div[@class="tagsWrapper"])/a'):
         genreName = genreLink.text_content().title()
 
-        Log('---- sitePornhub-update(): genres:                 %s' % genreName)
+        if Prefs['debug_enable']:
+            Log('---- sitePornhub-update(): genres:                 %s' % genreName)
 
         movieGenres.addGenre(genreName)
 
@@ -77,37 +82,42 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         actorName = actorLink.text_content().title().strip()
         actorPhotoURL = actorLink.xpath("//img[@class='avatar']/@src")
         
-        Log('---- sitePornhub-update(): actor name:             %s' % actorName)        
-        Log('----                     : actor picture:          %s' % actorPhotoURL)
+        if Prefs['debug_enable']:
+            Log('---- sitePornhub-update(): actor name:             %s' % actorName)        
+            Log('----                     : actor picture:          %s' % actorPhotoURL)
         
         movieActors.addActor(actorName, actorPhotoURL)
 
-    # # Posters/Background
-    # try:
-        # background =  .xpath('//div[@class="fakeplayer"]//img/@src0_1x')[0]
-    # except:
-        # background = detailsPageElements.xpath('//div[@class="fakeplayer"]//img/@src0_1x')[0]
+    # Posters/Background
+    try:
+        background =  detailsPageElements.xpath('//div[@id="player"]/img/@src')[0]
+    except:
+        pass
 
-    # art.append(background)
+    art.append(background)
 
-    # Log('Artwork found: %d' % len(art))
-    # for idx, posterUrl in enumerate(art, 1):
-        # if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
-            # # Download image file for analysis
-            # try:
-                # image = PAutils.HTTPRequest(posterUrl)
-                # im = StringIO(image.content)
-                # resized_image = Image.open(im)
-                # width, height = resized_image.size
-                # # Add the image proxy items to the collection
-                # if width > 1:
-                    # # Item is a poster
-                    # metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                # if width > 100:
-                    # # Item is an art item
-                    # metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-            # except:
-                # pass
+    Log('Artwork found: %d' % len(art))
+    for idx, posterUrl in enumerate(art, 1):
+        if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
+            # Download image file for analysis
+            try:
+                image = PAutils.HTTPRequest(posterUrl)
+                im = StringIO(image.content)
+                resized_image = Image.open(im)
+                width, height = resized_image.size
+                # Add the image proxy items to the collection
+                if width > 1:
+                    # Item is a poster
+                    metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    if Prefs['debug_enable']:
+                        Log('---- sitePornhub-update(): poster:                 %s' % posterUrl)
+                if width > 100:
+                    # Item is an art item
+                    metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    if Prefs['debug_enable']:
+                        Log('---- sitePornhub-update(): art item:               %s' % posterUrl)
+            except:
+                pass
 
     Log('---- sitePornhub-update(): leaving')
 
