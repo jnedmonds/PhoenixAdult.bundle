@@ -17,8 +17,13 @@ def getDatafromAPI(url, query, variables, referer):
 
 
 def search(results, lang, siteNum, searchData):
+    Log('---- networkStrike3-search(): starting with title: %s' % searchData.title)
+
     sceneID = None
     parts = searchData.title.split()
+
+    Log('---- networkStrike3-search(): seaching')
+
     if unicode(parts[0], 'UTF-8').isdigit() and len(parts[0]) > 4:
         sceneID = parts[0]
         searchData.title = searchData.title.replace(sceneID, '', 1).strip()
@@ -27,6 +32,8 @@ def search(results, lang, siteNum, searchData):
         searchResult = getDatafromAPI(PAsearchSites.getSearchSearchURL(siteNum), search_id_query, search_variables, PAsearchSites.getSearchBaseURL(siteNum))
         if searchResult:
             titleNoFormatting = PAutils.parseTitle(searchResult['findOneVideo']['title'], siteNum)
+            Log('---- networkStrike3-search(): found result title:     %s' % titleNoFormatting)
+
             releaseDate = parse(searchResult['findOneVideo']['releaseDate']).strftime('%Y-%m-%d')
             curID = PAutils.Encode(searchResult['findOneVideo']['slug'])
             videoID = int(searchResult['findOneVideo']['videoId'])
@@ -45,6 +52,8 @@ def search(results, lang, siteNum, searchData):
         if searchResults:
             for searchResult in searchResults['searchVideos']['edges']:
                 titleNoFormatting = PAutils.parseTitle(searchResult['node']['title'], siteNum)
+                Log('---- networkStrike3-search(): found result title:     %s' % titleNoFormatting)
+
                 releaseDate = parse(searchResult['node']['releaseDate']).strftime('%Y-%m-%d')
                 curID = PAutils.Encode(searchResult['node']['slug'])
 
@@ -55,10 +64,14 @@ def search(results, lang, siteNum, searchData):
 
                 results.Append(MetadataSearchResult(id='%s|%d' % (curID, siteNum), name='%s %s' % (titleNoFormatting, releaseDate), score=score, lang=lang))
 
+    Log('---- networkStrike3-search(): leaving')
+
     return results
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    Log('---- networkStrike3-update(): starting')
+
     metadata_id = str(metadata.id).split('|')
     sceneName = PAutils.Decode(metadata_id[0])
 
@@ -69,13 +82,15 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Title
     metadata.title = PAutils.parseTitle(video['title'], siteNum)
+    Log('---- networkStrike3-update(): updating title:    %s' % metadata.title)
 
     # Summary
     metadata.summary = video['description']
 
     # Studio
     metadata.studio = PAsearchSites.getSearchSiteName(siteNum).title()
-
+    Log('---- networkStrike3-update(): studio:            %s' % metadata.title)
+    
     # Tagline and Collection(s)
     metadata.collections.add(metadata.studio)
 
@@ -87,12 +102,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     # Genres
     if metadata.studio == 'Tushy' or metadata.studio == 'TushyRaw':
         movieGenres.addGenre('Anal')
+        Log('---- networkStrike3-update(): genres:            Anal')
 
     if video['categories']:
         for tag in video['categories']:
             genreName = tag['name']
 
             movieGenres.addGenre(genreName)
+            Log('---- networkStrike3-update(): genres:            %s' % genreName)
 
     # Actor(s)
     actors = video['models']
@@ -103,6 +120,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             actorPhotoURL = actor['images']['listing'][0]['highdpi']['double']
 
         movieActors.addActor(actorName, actorPhotoURL)
+        Log('---- networkStrike3-update(): actor name:        %s' % actorName)        
+        Log('----                        : actor picture:     %s' % actorPhotoURL)
 
     # Director
     if video['directors']:
@@ -142,11 +161,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if height > width:
                     # Item is a poster
                     metadata.posters[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- networkStrike3-update(): poster:            %s' % posterUrl)
+                    
                     posterExists = True
                 if width > height:
                     # Item is an art item
                     images.append((image, cleanUrl))
                     metadata.art[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- networkStrike3-update(): art item:          %s' % posterUrl)
             except:
                 pass
         elif PAsearchSites.posterOnlyAlreadyExists(cleanUrl, metadata):
@@ -162,8 +184,11 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if width > 1:
                     # Item is a poster
                     metadata.posters[cleanUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- networkStrike3-update(): poster:            %s' % posterUrl)
             except:
                 pass
+
+    Log('---- networkStrike3-update(): leaving')
 
     return metadata
 

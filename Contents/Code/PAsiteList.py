@@ -189,6 +189,7 @@ import sitePornbox
 import siteJesseLoadsMonsterFacials
 import networkGASM
 import siteHeavyOnHotties
+import sitePornhub
 
 searchSites = {
     0: ('BlackedRaw', 'https://www.blackedraw.com', '/graphql'),
@@ -1983,6 +1984,7 @@ searchSites = {
     1889: ('Score Classics', 'https://www.scoreclassics.com', '/classic-boob-videos/'),
     1890: ('LustCinema', 'https://next-prod-api.lustcinema.com', '/api/search'),
     1891: ('CzechAR', 'https://www.czechar.com', '/model-'),
+    1892: ('Pornhub', 'https://www.pornhub.com', '/video/search?search='),
 }
 
 abbreviations = (
@@ -2205,6 +2207,7 @@ abbreviations = (
     ('^pdmcl ', 'ChicasLoca '),
     ('^penthouse ', 'PenthouseGold '),
     ('^pf ', 'PornFidelity '),
+    ('^ph ', 'Pornhub '),
     ('^phd ', 'PassionHD '),
     ('^phdp ', 'PetiteHDPorn '),
     ('^plib ', 'PornstarsLikeitBig '),
@@ -3333,4 +3336,8 @@ def getProviderFromSiteNum(siteNum):
         elif siteNum == 1890:
             provider = siteXConfessions
 
+        # Pornhub
+        elif siteNum == 1892:
+            provider = sitePornhub
+            
     return provider

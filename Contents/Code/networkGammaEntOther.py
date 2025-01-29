@@ -9,7 +9,7 @@ def getAPIKey(siteNum):
     token = None
     if token_key and token_key in Dict:
         data = Dict[token_key]
-        data = base64.b64decode(data).decode('UTF-8')
+        #data = base64.b64decode(data).decode('UTF-8')
         if 'validUntil=' in data:
             timestamp = int(data.split('validUntil=')[1].split('&')[0])
             if timestamp > time.time():
@@ -47,6 +47,8 @@ def getAlgolia(url, indexName, params, referer):
 
 
 def search(results, lang, siteNum, searchData):
+    Log('---- networkGammaEntOther-search(): starting with title: %s' % searchData.title)
+
     searchData.title = searchData.encoded.replace('%20', ' ')
     sceneID = searchData.title.split(' ', 1)[0]
     if unicode(sceneID, 'UTF-8').isdigit():
@@ -55,6 +57,8 @@ def search(results, lang, siteNum, searchData):
         sceneID = None
 
     apiKEY = getAPIKey(siteNum)
+    Log('---- networkGammaEntOther-search(): seaching APIKEY: %s' % apiKEY)
+
     for sceneType in ['scenes', 'movies']:
         url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=TSMKFA364Q&x-algolia-api-key=' + apiKEY
         if sceneID and not searchData.title:
@@ -76,6 +80,8 @@ def search(results, lang, siteNum, searchData):
                 curID = searchResult['movie_id']
 
             titleNoFormatting = searchResult['title']
+            Log('---- networkGammaEntOther-search(): found result title:     %s' % titleNoFormatting)
+            
             releaseDate = releaseDate.strftime('%Y-%m-%d')
 
             if sceneID:
@@ -87,10 +93,14 @@ def search(results, lang, siteNum, searchData):
 
             results.Append(MetadataSearchResult(id='%d|%d|%s|%s' % (curID, siteNum, sceneType, releaseDate), name='[%s] %s %s' % (sceneType.capitalize(), PAutils.parseTitle(titleNoFormatting, siteNum), releaseDate), score=score, lang=lang))
 
+    Log('---- networkGammaEntOther-search(): leaving')
+
     return results
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    Log('---- networkGammaEntOther-update(): starting')
+
     metadata_id = str(metadata.id).split('|')
     sceneID = int(metadata_id[0])
     sceneType = metadata_id[2]
@@ -100,6 +110,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     apiKEY = getAPIKey(siteNum)
 
     url = PAsearchSites.getSearchSearchURL(siteNum) + '?x-algolia-application-id=TSMKFA364Q&x-algolia-api-key=' + apiKEY
+    Log('---- networkGammaEntOther-update(): url:               %s' % url)
+
     data = getAlgolia(url, 'all_' + sceneType, 'filters=%s=%d' % (sceneIDName, sceneID), PAsearchSites.getSearchBaseURL(siteNum))
     detailsPageElements = data[0]
 
@@ -120,7 +132,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         title = detailsPageElements['title']
 
     metadata.title = PAutils.parseTitle(title, siteNum)
-
+    Log('---- networkGammaEntOther-update(): updating title:    %s' % metadata.title)
+    
     # Summary
     metadata.summary = detailsPageElements['description'].replace('</br>', '\n').replace('<br>', '\n')
 
@@ -132,17 +145,21 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             metadata.studio = detailsPageElements['studio_name']
     else:
         metadata.studio = detailsPageElements['network_name']
+    Log('---- networkGammaEntOther-update(): studio:            %s' % metadata.studio)
 
     # Tagline and Collection(s)
     if 'filthykings' in PAsearchSites.getSearchBaseURL(siteNum):
         metadata.tagline = detailsPageElements['serie_name']
+        Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
     for collectionName in ['studio_name', 'serie_name']:
         if collectionName in detailsPageElements:
             metadata.collections.add(detailsPageElements[collectionName])
+            Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements[collectionName])
     if (':' in detailsPageElements['title'] or '#' in detailsPageElements['title']) and len(scenesPagesElements) > 1:
         if 'movie_title' in detailsPageElements:
             metadata.collections.add(detailsPageElements['movie_title'])
-
+            Log('---- networkGammaEntOther-update(): adding collection: %s' % detailsPageElements['movie_title'])
+            
     # Release Date
     date_object = parse(sceneDate)
     metadata.originally_available_at = date_object
@@ -153,6 +170,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         genreName = genreLink['name']
         if genreName:
             movieGenres.addGenre(genreName)
+            Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
 
     if sceneType == 'movies':
         for idx, scene in scenesPagesElements:
@@ -160,6 +178,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 genreName = genreLink['name']
                 if genreName:
                     movieGenres.addGenre(genreName)
+                    Log('---- networkGammaEntOther-update(): genres:            %s' % genreName)
 
     # Actor(s)
     female = []
@@ -182,6 +201,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     combined = female + male
     for actor in combined:
         movieActors.addActor(actor[0], actor[1])
+        Log('---- networkGammaEntOther-update(): actor name:        %s' % actor[0])        
+        Log('----                              : actor picture:     %s' % actor[1])
 
     # Posters
     if not PAsearchSites.getSearchBaseURL(siteNum).endswith(('girlsway.com', 'puretaboo.com')):
@@ -211,10 +232,13 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if width > 1:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- networkGammaEntOther-update(): poster:            %s' % posterUrl)
                 if width > 100 and width > height:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- networkGammaEntOther-update(): art item:          %s' % posterUrl)
             except:
                 pass
 
+    Log('---- networkGammaEntOther-update(): leaving')
     return metadata

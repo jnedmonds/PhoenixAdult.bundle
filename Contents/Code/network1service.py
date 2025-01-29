@@ -9,9 +9,9 @@ def get_Token(siteNum):
     token = None
     if token_key and token_key in Dict:
         data = Dict[token_key].split('.')[1] + '=='
-        data = base64.b64decode(data).decode('UTF-8')
-        if json.loads(data)['exp'] > time.time():
-            token = Dict[token_key]
+        #data = base64.b64decode(data).decode('UTF-8')
+        #if json.loads(data)['exp'] > time.time():
+        token = Dict[token_key]
 
     if not token:
         req = PAutils.HTTPRequest(url, 'HEAD')
@@ -27,6 +27,8 @@ def get_Token(siteNum):
 
 
 def search(results, lang, siteNum, searchData):
+    Log('---- network1service-search(): starting with title: %s' % searchData.title)
+
     token = get_Token(siteNum)
     headers = {
         'Instance': token,
@@ -37,6 +39,8 @@ def search(results, lang, siteNum, searchData):
     if unicode(parts[0], 'UTF-8').isdigit():
         sceneID = parts[0]
         searchData.title = searchData.title.replace(sceneID, '', 1).strip()
+
+    Log('---- network1service-search(): seaching')
 
     for sceneType in ['scene', 'movie', 'serie', 'trailer']:
         if sceneID and not searchData.title:
@@ -49,6 +53,9 @@ def search(results, lang, siteNum, searchData):
             searchResults = req.json()['result']
             for searchResult in searchResults:
                 titleNoFormatting = PAutils.parseTitle(searchResult['title'].replace('ï¿½', '\''), siteNum)
+
+                Log('---- network1service-search(): found result title:     %s' % titleNoFormatting)
+
                 releaseDate = parse(searchResult['dateReleased']).strftime('%Y-%m-%d')
                 curID = searchResult['id']
                 siteName = searchResult['brand'].title()
@@ -74,10 +81,14 @@ def search(results, lang, siteNum, searchData):
 
                 results.Append(MetadataSearchResult(id='%s|%d|%s' % (curID, siteNum, sceneType), name='%s [%s] %s' % (titleNoFormatting, siteDisplay, releaseDate), score=score, lang=lang))
 
+        Log('---- network1service-search(): leaving')
+
     return results
 
 
 def update(metadata, lang, siteNum, movieGenres, movieActors, art):
+    Log('---- network1service-update(): starting')
+
     metadata_id = str(metadata.id).split('|')
     sceneID = metadata_id[0]
     sceneType = metadata_id[2]
@@ -87,11 +98,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         'Instance': token,
     }
     url = PAsearchSites.getSearchSearchURL(siteNum) + '/v2/releases?type=%s&id=%s' % (sceneType, sceneID)
+    Log('---- network1service-update(): sceneURL:               %s' % url)
+
     req = PAutils.HTTPRequest(url, headers=headers)
     detailsPageElements = req.json()['result'][0]
 
     # Title
     metadata.title = PAutils.parseTitle(detailsPageElements['title'], siteNum).replace('ï¿½', '\'')
+    Log('---- network1service-update(): updating title:         %s' % metadata.title)
 
     # Summary
     description = None
@@ -106,6 +120,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
 
     # Studio
     metadata.studio = PAutils.parseTitle(detailsPageElements['brand'], siteNum)
+    Log('---- network1service-update(): studio:                 %s' % metadata.studio)
 
     # Tagline and Collection(s)
     seriesNames = []
@@ -113,10 +128,12 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
     if 'collections' in detailsPageElements and detailsPageElements['collections']:
         for collection in detailsPageElements['collections']:
             seriesNames.append(collection['name'])
+            Log('---- network1service-update(): adding collection:      %s' % collection['name'])
 
     if 'parent' in detailsPageElements:
         if 'title' in detailsPageElements['parent']:
             seriesNames.append(detailsPageElements['parent']['title'])
+            Log('---- network1service-update(): adding collection:      %s' % detailsPageElements['parent']['title'])
 
     isInCollection = False
     siteName = PAsearchSites.getSearchSiteName(siteNum).lower().replace(' ', '').replace('\'', '')
@@ -142,6 +159,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
         genreName = genreLink['name']
 
         movieGenres.addGenre(genreName)
+        Log('---- network1service-update(): genres:                 %s' % genreName)
 
     # Actor(s)
     actors = detailsPageElements['actors']
@@ -157,6 +175,8 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
             actorPhotoURL = actorData['images']['profile']['0']['xs']['url']
 
         movieActors.addActor(actorName, actorPhotoURL)
+        Log('---- network1service-update(): actor name:             %s' % actorName)        
+        Log('----                         : actor picture:          %s' % actorPhotoURL)
 
     # Posters
     for imageType in ['poster', 'cover']:
@@ -165,7 +185,7 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if image.isdigit():
                     art.append(detailsPageElements['images'][imageType][image]['xx']['url'])
 
-    Log('Artwork found: %d' % len(art))
+    Log('---- network1service-update(): Artwork found:          %d' % len(art))
     for idx, posterUrl in enumerate(art, 1):
         if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
             # Download image file for analysis
@@ -178,10 +198,14 @@ def update(metadata, lang, siteNum, movieGenres, movieActors, art):
                 if width > 1:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- network1service-update(): poster:                 %s' % posterUrl)
                 if width > 100 and width > height:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                    Log('---- network1service-update(): art item:               %s' % posterUrl)
             except:
                 pass
+
+    Log('---- network1service-update(): leaving')
 
     return metadata
