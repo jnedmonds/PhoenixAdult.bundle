@@ -1874,8 +1874,8 @@ searchSites = {
     1779: ('Jonathan Jordan XXX', 'https://jonathanjordanxxx.com', '/MemberSceneSearch?q='),
     1780: ('Kaiia Eve', 'https://kaiiaeve.com', '/MemberSceneSearch?q='),
     1781: ('Kings of Fetish', 'https://kingsoffetish.com', '/MemberSceneSearch?q='),
-    1782: ('Lethal Hardcore', 'https://lethalhardcore.com', '/MemberSceneSearch?q='),
-    1783: ('Lethal Hardcore VR', 'https://lethalhardcorevr.com', '/MemberSceneSearch?q='),
+    1782: ('Lethal Hardcore', 'https://www.lethalhardcore.com', 'https://tsmkfa364q-dsn.algolia.net/1/indexes/*/queries'),
+    1783: ('Lethal Hardcore VR', 'https://www.lethalhardcorevr.com', 'https://tsmkfa364q-dsn.algolia.net/1/indexes/*/queries'),
     1784: ('Only 3x', 'https://only3x.com', '/MemberSceneSearch?q='),
     1785: ('LeWood', 'https://lewood.com', '/MemberSceneSearch?q='),
     1786: ('Pornstar Stroker', 'https://pornstarstroker.com', '/MemberSceneSearch?q='),
@@ -2810,7 +2810,7 @@ def getProviderFromSiteNum(siteNum):
             provider = siteVivid
 
         # AdultEmpireCash Network
-        elif siteNum == 815 or siteNum == 1337 or siteNum == 1574 or (1765 <= siteNum <= 1796) or siteNum == 1800:
+        elif siteNum == 815 or siteNum == 1337 or siteNum == 1574 or (1765 <= siteNum <= 1781) or (1784 <= siteNum <= 1796) or siteNum == 1800:
             provider = networkAdultEmpireCash
 
         # My Pervy Family
@@ -3335,6 +3335,10 @@ def getProviderFromSiteNum(siteNum):
         # Lust Cinema
         elif siteNum == 1890:
             provider = siteXConfessions
+
+        # Lethal Hardcore
+        elif (1782 <= siteNum <= 1783):
+            provider = networkGammaEntOther
 
         # Pornhub
         elif siteNum == 1892:
