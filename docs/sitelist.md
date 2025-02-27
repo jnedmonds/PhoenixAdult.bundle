@@ -778,6 +778,9 @@ If you're having difficulty finding the SceneID, double-check [PAsiteList.py](..
   - WhippedAss
   - WiredPussy
 + #### Kinky Spa | ✓
++ #### Lethal Hardcore | ✅
+  - Lethal Hardcore
+  - Lethal Hardcore VR
 + #### LetsDoeIt Network | ✅
   - A Girl Knows
   - Bitches Abroad
