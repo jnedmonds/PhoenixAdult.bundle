@@ -747,6 +747,7 @@ ActorsReplaceStudios = {
         'Wanda Curtis': ['Wanda'],
     },
     13: {  # ManyVids
+        'Abella Olsen': ['abellaolsen1'],
         'Abigail Mac': ['AbigailMac'],
         'Adreena Winters': ['Adreena_Winters'],
         'Alana Rose': ['AlanaRose8', 'Alanarose8'],
@@ -755,6 +756,7 @@ ActorsReplaceStudios = {
         'Blake Blossom': ['blakeblossomxxx'],
         'Brandi Sparks': ['BrandiSparks'],
         'Carla Cute': ['CarlaCute', 'Carlacute', 'carlacute'],
+        'Darling Josefin': ['darlingjosefin'],
         'Eva Elfie': ['EvaElfie'],
         'Florane Russell': ['Florane_Russell'],
         'Gina Gerson': ['Gina Gerson Real'],
@@ -772,6 +774,7 @@ ActorsReplaceStudios = {
         'Noemie Bilas': ['Noemiexbilas'],
         'Paige Owens': ['PaigeOwensXXX'],
         'Riley Reid': ['Riley_Reid'],
+        'Roni Tailed': ['Roni_Tailed'],
         'Ruth Lee': ['Ruthlee', 'RuthLee'],
         'Shaiden Rogue': ['Shaiden'],
         'Skylar Snow': ['SkylarSnowXXX'],
