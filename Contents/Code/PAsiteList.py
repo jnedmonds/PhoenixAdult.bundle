@@ -1232,7 +1232,7 @@ searchSites = {
     1037: ('GinaGerson', 'https://www.ginagerson.xxx', '/sapi/'),
     1038: (),
     1039: ('VinaSkyXXX', 'https://www.vinaskyxxx.com', '/sapi/'),
-    1040: (),
+    1040: ('Reality Sis', 'https://nubiles-porn.com', '/video/website/73/'),
     1041: (),
     1042: (),
     1043: (),
@@ -2546,7 +2546,7 @@ def getProviderFromSiteNum(siteNum):
             provider = networkKink
 
         # Nubiles
-        elif (525 <= siteNum <= 545) or (755 <= siteNum <= 756) or siteNum == 766 or (995 <= siteNum <= 996) or siteNum == 1256 or siteNum == 1360 or (1396 <= siteNum <= 1397) or siteNum == 1551 or (1575 <= siteNum <= 1582) or siteNum == 1686:
+        elif (525 <= siteNum <= 545) or (755 <= siteNum <= 756) or siteNum == 766 or (995 <= siteNum <= 996) or siteNum == 1040 or siteNum == 1256 or siteNum == 1360 or (1396 <= siteNum <= 1397) or siteNum == 1551 or (1575 <= siteNum <= 1582) or siteNum == 1686:
             provider = networkNubiles
 
         # BellaPass
