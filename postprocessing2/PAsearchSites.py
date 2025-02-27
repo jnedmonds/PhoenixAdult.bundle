@@ -991,6 +991,7 @@ searchSites[980] = ("Melena Maria Rya", "Melena Maria Rya", "https://www.melenam
 searchSites[981] = ("ALS Angels", "ALS Angels", "http://www.alsangels.com", "http://www.alsangels.com/dailyvideos.html")
 searchSites[982] = ("Watch4Beauty", "Watch4Beauty", "https://www.watch4beauty.com", "https://www.watch4beauty.com/updates/")
 searchSites[983] = ("Femjoy", "Femjoy", "https://femjoy.com", "/search-videos?query=")
+searchSites[1040] = ("Reality Sis", "Reality Sis", "https://nubiles-porn.com", "https://nubiles-porn.com/video/gallery/website/73")
 searchSites[1890] = ("LustCinema", "LustCinema", "https://next-prod-api.lustcinema.com", "https://next-prod-api.lustcinema.com/api/search")
 
 
